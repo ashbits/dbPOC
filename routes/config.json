@@ -1,0 +1,10 @@
+{
+    "contacts" : {
+        "bucket": "tscontacts",
+        "bucketType" : "contacts"
+    },
+    "accounts" : {
+        "bucket": "tsaccounts",
+        "bucketType" : "accounts"
+    }
+}
