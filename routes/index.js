@@ -1,9 +1,16 @@
 var express = require("express");
 require("dotenv").config();
-var repository = require("../services/repository");
 var router = express.Router();
 var config = require("./config.json");
-var dedup = require("../services/dedup");
+var contactInsert = require('../pg/insertContacts.js')
+var accountInsert = require('../pg/insertAccounts.js')
+var contactDedup = require('../pg/dedupContact.js')
+
+let pgConfig = require('../pg/config.js');
+const { Pool } = require('pg');
+let postgresConfig = pgConfig();
+const pool = new Pool(postgresConfig);
+
 /* GET home page. */
 router.get("/", function (req, res) {
 	res.render("index", {
@@ -11,108 +18,48 @@ router.get("/", function (req, res) {
 	});
 });
 
-router.post("/contact/seed/riak", async function (req, res) {
-	var id = req.body["external_contact_id_s"];
-	var contactConfig = config.contacts;
+router.post("/contact/seed/pg", async function (req, res) {
+	var payload = req.body;
 	try {
-		await dedup.createDedupeFields(req.body);
-		var data = await repository.save(id, contactConfig.bucket,
-			contactConfig.bucketType, req.body);
+		let data = await contactInsert(payload, pool);
 		res.status(200).json({
 			data: data
 		});
-	} catch (err) {
+	} catch (e) {
 		res.status(500).json({
-			"error": err
+			"error": e
 		});
 	}
 });
 
-router.post("/account/seed/riak", async function (req, res) {
-	var id = req.body["external_contact_id_s"];
-	var accountConfig = config.accounts;
+
+router.post("/contact/dedup/pg", async function (req, res) {
+	var payload = req.body;
 	try {
-		var data = await repository.save(id, accountConfig.bucket,
-			accountConfig.bucketType, req.body);
+		let data = await contactDedup(payload, pool);
 		res.status(200).json({
 			data: data
 		});
-	} catch (err) {
+	} catch (e) {
 		res.status(500).json({
-			"error": err
+			"error": e
 		});
 	}
 });
 
-router.get("/contact/:id/riak", async function (req, res) {
-	var id = req.params.id;
-	var contactConfig = config.contacts;
+router.post("/account/seed/pg", async function (req, res) {
+	var payload = req.body;
 	try {
-		var data = await repository.get(id, contactConfig.bucket,
-			contactConfig.bucketType);
+		let data = await accountInsert(payload, pool);
 		res.status(200).json({
 			data: data
 		});
-	} catch (err) {
+	} catch (e) {
 		res.status(500).json({
-			"error": err
+			"error": e
 		});
 	}
 });
 
-router.post("/contact/update/riak", async function (req, res) {
-	var id = req.body["external_contact_id_s"];
-	var contactConfig = config.contacts;
-	try {
-		var {previousData, updatedData} = await repository.update(id, contactConfig.bucket,
-			contactConfig.bucketType, req.body);
-		if(previousData && updatedData) {
-			await dedup.updateDedupeFields(previousData, updatedData);
-		}
-		res.status(200).json(updatedData);
-	} catch (err) {
-		res.status(500).json({
-			"error": err
-		});
-	}
-});
-
-router.post("/contact/dedup/riak", async function (req, res) {
-	try {
-		var dedupResult = await dedup.checkDedupeFields(req.body);
-		res.status(200).json(dedupResult);
-	} catch (err) {
-		res.status(500).json({
-			"error": err
-		});
-	}
-});
-
-router.post("/contact/upsert/riak", async function (req, res) {
-	var id = req.body["external_contact_id_s"];
-	var contactConfig = config.contacts;
-	try {
-		var isContactExist = await repository.get(id, contactConfig.bucket,
-			contactConfig.bucketType);
-		if (isContactExist) {
-			var {previousData, updatedData} = await repository.update(id, contactConfig.bucket,
-				contactConfig.bucketType, req.body);
-			if(previousData && updatedData) {
-				await dedup.updateDedupeFields(previousData, updatedData);
-			}
-		} else {
-			await dedup.createDedupeFields(req.body);
-			var data = await repository.save(id, contactConfig.bucket,
-				contactConfig.bucketType, req.body);
-		}
-		res.status(200).json({
-			data : updatedData || data
-		});
-	} catch (err) {
-		res.status(500).json({
-			"error": err
-		});
-	}
-});
 
 module.exports = router;
