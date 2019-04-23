@@ -33,7 +33,14 @@ function acccountTransform (row) {
 	    "company_revenue": row['company_revenue_l'] || '',
 	    "employees_size": row['employees_size_l'] || ''
 	};
-	return updatedRow;
+
+	var finalMap = {};
+	Object.keys(updatedRow).forEach((item)=>{
+		if (updatedRow[item] !== "" && updatedRow[item] !== null) {
+			finalMap[item] = updatedRow[item];
+		}
+	});
+	return finalMap;
 }
 
 module.exports = acccountTransform;

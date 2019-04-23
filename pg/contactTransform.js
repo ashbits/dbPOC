@@ -35,7 +35,14 @@ function contactTransform (row) {
 		"imported_by": row['user_s'] || '',
 		"zipcode": row['zipcode_sst'] || '',
 	};
-	return updatedRow;
+
+	var finalMap = {};
+	Object.keys(updatedRow).forEach((item)=>{
+		if (updatedRow[item] !== "" && updatedRow[item] !== null) {
+			finalMap[item] = updatedRow[item];
+		}
+	});
+	return finalMap;
 }
 
 module.exports = contactTransform;
