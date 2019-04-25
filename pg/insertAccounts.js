@@ -32,8 +32,9 @@ async function accountInsert (accountItemPayload, pool) {
   transformTick.start();
 
   let accountItemRaw = [].concat(accountItemPayload);
+  console.log('Payload:-', accountItemRaw);
   let accountItem = accountItemRaw.map((item)=>{
-    return contactTransform(item);
+    return accountTransform(item);
   });
   let query = Account.insert(accountItem).returning(Account.external_id).toQuery();
 

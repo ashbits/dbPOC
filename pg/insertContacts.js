@@ -28,6 +28,7 @@ async function contactInsert (contactItemPayload, pool) {
 
   transformTick.start();
   let contactItemRaw = [].concat(contactItemPayload);
+  console.log('Payload:-', contactItemRaw);
   let contactItem = contactItemRaw.map((item)=>{
     return contactTransform(item);
   });
