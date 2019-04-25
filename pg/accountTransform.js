@@ -23,7 +23,6 @@ function acccountTransform (row) {
 	    },
 	    "industry": row['industry_sst'] || '',
 	    "subindustry": row['subindustry_sst'] || '',
-	    "alias": row['alias_ss'] || [],
 	    "source": row['source_sst'] || '',
 	    "created_at": row['created_at_dt'] || '',
 	    "updated_at": row['updated_at_dt'] || '',
@@ -33,6 +32,7 @@ function acccountTransform (row) {
 	    "company_revenue": row['company_revenue_l'] || '',
 	    "employees_size": row['employees_size_l'] || ''
 	};
+	updatedRow["alias"] = row['alias_ss'] ? convertJSONString(row['alias_ss']) : null;
 
 	var finalMap = {};
 	Object.keys(updatedRow).forEach((item)=>{
@@ -41,6 +41,18 @@ function acccountTransform (row) {
 		}
 	});
 	return finalMap;
+}
+
+function convertJSONString (str) {
+	var finalArray = str;
+	finalArray = finalArray.replace(/'/g, '"');
+	try {
+		finalArray = JSON.parse(finalArray);
+	} catch (e) {
+		console.error(e);
+		return null;
+	}
+	return finalArray;
 }
 
 module.exports = acccountTransform;
