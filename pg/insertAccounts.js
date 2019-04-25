@@ -5,7 +5,7 @@ const accountTransform = require('./accountTransform.js');
 const config = require('./config.js');
 const ExecTimer = require('./execTimer.js');
 
-async function accountInsert (accountItemRaw, pool) {
+async function accountInsert (accountItemPayload, pool) {
   let client;
   var self      = this;
   var t         = new ExecTimer();
@@ -31,7 +31,10 @@ async function accountInsert (accountItemRaw, pool) {
 
   transformTick.start();
 
-  let accountItem = accountTransform(accountItemRaw);
+  let accountItemRaw = [].concat(accountItemPayload);
+  let accountItem = accountItemRaw.map((item)=>{
+    return contactTransform(item);
+  });
   let query = Account.insert(accountItem).returning(Account.external_id).toQuery();
 
   transformTick.stop();

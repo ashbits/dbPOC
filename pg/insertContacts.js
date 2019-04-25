@@ -2,7 +2,7 @@ const Contact = require('./Contact.js');
 const contactTransform = require('./contactTransform.js');
 const ExecTimer = require('./execTimer.js');
 
-async function contactInsert (contactItemRaw, pool) {
+async function contactInsert (contactItemPayload, pool) {
   let client;
   var self      = this;
   var t         = new ExecTimer();
@@ -27,8 +27,11 @@ async function contactInsert (contactItemRaw, pool) {
   }
 
   transformTick.start();
+  let contactItemRaw = [].concat(contactItemPayload);
+  let contactItem = contactItemRaw.map((item)=>{
+    return contactTransform(item);
+  });
 
-  let contactItem = contactTransform(contactItemRaw);
   let query = Contact.insert(contactItem).returning(Contact.external_contact_id).toQuery();
 
   transformTick.stop();
@@ -37,7 +40,7 @@ async function contactInsert (contactItemRaw, pool) {
     queryTick.start();
 
     let {rows} = await client.query(query);
-    payload.reponse = (rows.length) ? rows[0] : null;
+    payload.reponse = (rows.length) ? rows : null;
 
     queryTick.stop();
   } catch (e) {
